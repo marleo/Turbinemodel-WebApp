@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}YOLO Wind Turbine{% endblock %}</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            margin: 24px;
+        }
+        nav {
+            background-color: #212aad;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display:flex;
+            justify-content: flex-end;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 16px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .wrap {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('main.index') }}">Segmentation Tool</a>
+        <a href="{{ url_for('main.modelcalc') }}">Model Calculator</a>
+    </nav>
+
+    <div class="wrap">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

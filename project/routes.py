@@ -67,3 +67,7 @@ def set_model(model_name):
         else:
             return f"Unknown model {model_name}", 400
     return f"Switched to model {model_name.upper()}"
+
+@main.route("/modelcalc")
+def modelcalc():
+    return render_template("modelcalc.html")
