@@ -1,4 +1,4 @@
-# Wind Turbine Blade Segmentation and Tracking
+# WebApp for Wind Turbine Blade Segmentation/Tracking & Camera Parameter Calculations
 
 This is a Flask application for processing videos of wind turbines using YOLO models for blade segmentation and tracking.
 
