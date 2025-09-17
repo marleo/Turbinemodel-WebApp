@@ -22,3 +22,8 @@ outputs/
 
 # Ignore the actual config file with your private paths
 config.py
+
+static/uploads/
+static/outputs/
+!static/uploads/.gitkeep
+!static/outputs/.gitkeep

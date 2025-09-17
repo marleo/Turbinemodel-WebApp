@@ -2,8 +2,16 @@ import os
 from flask import Flask
 
 def create_app():
-    # Create and configure the app
-    app = Flask(__name__, instance_relative_config=True)
+    # Calculate project root (one level above 'project')
+    basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+
+    # Create app with static_folder pointing to root-level static
+    app = Flask(
+        __name__,
+        instance_relative_config=True,
+        static_folder=os.path.join(basedir, "static"),
+        template_folder=os.path.join(basedir, "project", "templates")
+    )
 
     # Load configuration from config.py
     app.config.from_pyfile('../config.py')

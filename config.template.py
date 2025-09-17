@@ -4,8 +4,9 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # --- File Paths and Extensions ---
-UPLOAD_FOLDER = os.path.join(basedir, "uploads")
-OUTPUT_FOLDER = os.path.join(basedir, "outputs")
+STATIC_FOLDER = os.path.join(basedir, "static")
+UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, "uploads")
+OUTPUT_FOLDER = os.path.join(STATIC_FOLDER, "outputs")
 ALLOWED_EXTS = {"mp4", "mov", "avi", "mkv"}
 MODEL_PATH_V8 = r"C:/PATH/TO/YOLO_Training/runs/segment/yolov8n_seg_custom/weights/best.pt"
 MODEL_PATH_V11n = r"C:/PATH/TO/YOLO_Training/runs/segment/yolov11n_seg_custom/weights/best.pt"

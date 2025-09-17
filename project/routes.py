@@ -30,7 +30,10 @@ def index():
 
         try:
             process_video(in_path, out_path)
-            return render_template("index.html", video_url=url_for("main.serve_output", filename=out_name))
+            video_url = url_for("static", filename=f"outputs/{out_name}")
+            print("File saved at:", out_path)
+            print("Serving at:", url_for("static", filename=f"outputs/{out_name}"))
+            return render_template("index.html", video_url=video_url)
         except Exception as e:
             print(f"Error processing video: {e}")
             return "Error processing video.", 500
