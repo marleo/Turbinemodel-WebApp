@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Flask instance folder
+instance/
+
+# Application-specific folders
+uploads/
+outputs/
+
+# IDE files
+.vscode/
+.idea/
+
+# Ignore the actual config file with your private paths
+config.py
