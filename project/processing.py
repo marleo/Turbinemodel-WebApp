@@ -10,7 +10,6 @@ from config import (
 )
 from .models import yolo_v11n, active_model, active_model_lock # Note the '.' for relative import
 
-
 # -------------------- Angle-Stable ID logic --------------------
 def ang_diff(a, b):
     d = (a - b + math.pi) % (2 * math.pi) - math.pi
@@ -118,7 +117,7 @@ def process_video(in_path, out_path):
     cx = HUB_CX if HUB_CX is not None else W / 2.0
     cy = HUB_CY if HUB_CY is not None else H / 2.0
 
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    fourcc = cv2.VideoWriter_fourcc(*"avc1")
     out = cv2.VideoWriter(out_path, fourcc, fps, (W, H))
     stabilizer = AngleIDStabilizer(n_blades=N_BLADES)
     start_time = time.time()
