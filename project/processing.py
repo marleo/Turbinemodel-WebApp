@@ -114,8 +114,8 @@ def process_video(in_path, out_path):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     W, H = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    cx = HUB_CX if HUB_CX is not None else W / 2.0
-    cy = HUB_CY if HUB_CY is not None else H / 2.0
+    # initialize hub at image center, with smoothing
+    smoothed_hub_pos = np.array([W/2, H/2])
 
     fourcc = cv2.VideoWriter_fourcc(*"avc1")
     out = cv2.VideoWriter(out_path, fourcc, fps, (W, H))
@@ -127,7 +127,15 @@ def process_video(in_path, out_path):
         if not ret:
             break
 
-        results = yolo_v11n.track(frame, imgsz=IMG_SIZE, conf=CONF_THRES, iou=IOU_THRES, tracker=TRACKER_CFG, persist=True, verbose=False)
+        results = yolo_v11n.track(
+            frame,
+            imgsz=IMG_SIZE,
+            conf=CONF_THRES,
+            iou=IOU_THRES,
+            tracker=TRACKER_CFG,
+            persist=True,
+            verbose=False
+        )
         detections_with_ids = []
         r0 = results[0]
         if r0.boxes and r0.boxes.id is not None:
@@ -135,12 +143,29 @@ def process_video(in_path, out_path):
             if r0.masks:
                 for i, poly in enumerate(r0.masks.xy):
                     c = mask_centroid(np.array(poly, dtype=np.float32))
-                    if c: detections_with_ids.append({'id': track_ids[i], 'centroid': c, 'poly': np.array(poly, dtype=np.int32).reshape((-1, 1, 2))})
+                    if c:
+                        detections_with_ids.append({
+                            'id': track_ids[i],
+                            'centroid': c,
+                            'poly': np.array(poly, dtype=np.int32).reshape((-1, 1, 2))
+                        })
             else:
                 for i, (x1, y1, x2, y2) in enumerate(r0.boxes.xyxy.cpu().numpy()):
-                    detections_with_ids.append({'id': track_ids[i], 'centroid': ((x1+x2)/2, (y1+y2)/2), 'poly': None})
+                    detections_with_ids.append({
+                        'id': track_ids[i],
+                        'centroid': ((x1+x2)/2, (y1+y2)/2),
+                        'poly': None
+                    })
 
-        stable_id_map = stabilizer.get_stable_ids(detections_with_ids, cx, cy, fps=fps)
+        # --- NEW: update hub position based on centroids ---
+        centroids = [d['centroid'] for d in detections_with_ids]
+        if len(centroids) >= 2:
+            current_hub_pos = np.mean(centroids, axis=0)
+            smoothed_hub_pos = HUB_SMOOTHING_ALPHA * current_hub_pos + \
+                               (1 - HUB_SMOOTHING_ALPHA) * smoothed_hub_pos
+        hub_cx, hub_cy = smoothed_hub_pos
+
+        stable_id_map = stabilizer.get_stable_ids(detections_with_ids, hub_cx, hub_cy, fps=fps)
         annotated = frame.copy()
         for d in detections_with_ids:
             stable_id = stable_id_map.get(d['id'])
@@ -151,16 +176,21 @@ def process_video(in_path, out_path):
                     overlay = annotated.copy()
                     cv2.fillPoly(overlay, [d['poly']], color)
                     cv2.addWeighted(overlay, 0.4, annotated, 0.6, 0, annotated)
-                cv2.putText(annotated, f"Blade {stable_id}", (int(px)+6,int(py)-6), FONT, FONT_SCALE, (0,0,0), THICKNESS+2, cv2.LINE_AA)
-                cv2.putText(annotated, f"Blade {stable_id}", (int(px)+6,int(py)-6), FONT, FONT_SCALE, color, THICKNESS, cv2.LINE_AA)
+                cv2.putText(annotated, f"Blade {stable_id}", (int(px)+6,int(py)-6),
+                            FONT, FONT_SCALE, (0,0,0), THICKNESS+2, cv2.LINE_AA)
+                cv2.putText(annotated, f"Blade {stable_id}", (int(px)+6,int(py)-6),
+                            FONT, FONT_SCALE, color, THICKNESS, cv2.LINE_AA)
                 cv2.circle(annotated, (int(px), int(py)), 4, color, -1)
+
+        cv2.circle(annotated, (int(hub_cx), int(hub_cy)), 5, (255,255,255), -1)
+        cv2.circle(annotated, (int(hub_cx), int(hub_cy)), 9, (0,0,0), 2)
+
         out.write(annotated)
         print(f"\r[INFO] Processing frame {frame_count}/{total_frames}", end="")
 
     cap.release()
     out.release()
     print(f"\n[INFO] Video processing completed in {time.time() - start_time:.2f}s.")
-
 
 # -------------------- Webcam Streaming --------------------
 def gen_webcam_frames():
