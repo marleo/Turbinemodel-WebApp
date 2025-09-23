@@ -8,7 +8,7 @@ from config import (
     N_BLADES, IMG_SIZE, CONF_THRES, IOU_THRES, TRACKER_CFG, HUB_SMOOTHING_ALPHA,
     HUB_CX, HUB_CY, BLADE_COLORS, FONT, FONT_SCALE, THICKNESS
 )
-from .models import yolo_v11n, active_model, active_model_lock # Note the '.' for relative import
+from .models import yolo_v11n, yolo_v11s, yolo_v8, active_model, active_model_name, active_model_lock # Note the '.' for relative import
 
 # -------------------- Angle-Stable ID logic --------------------
 def ang_diff(a, b):
@@ -104,7 +104,8 @@ def mask_centroid(mask_poly_xy):
 
 
 # -------------------- Video Processing --------------------
-def process_video(in_path, out_path):
+def process_video(in_path, out_path, model=None, model_name=None):
+    global active_model, active_model_name
     print(f"\n[INFO] Starting video processing for '{in_path}'...")
     cap = cv2.VideoCapture(in_path)
     if not cap.isOpened():
@@ -122,20 +123,31 @@ def process_video(in_path, out_path):
     stabilizer = AngleIDStabilizer(n_blades=N_BLADES)
     start_time = time.time()
 
+    print(f" [INFO] Using {active_model_name} model for processing.")
+    print(f" [INFO] Model passed: {model_name}")
+
+    if model is not None:
+        active_model = model
+    if model_name is not None:  
+        active_model_name = model_name
+
     for frame_count in range(1, total_frames + 1):
         ret, frame = cap.read()
         if not ret:
             break
+        
+        with active_model_lock:
+            print(f" [INFO] Using {active_model_name} model for processing.")
+            results = active_model.track(
+                frame,
+                imgsz=IMG_SIZE,
+                conf=CONF_THRES,
+                iou=IOU_THRES,
+                tracker=TRACKER_CFG,
+                persist=True,
+                verbose=False
+            )
 
-        results = yolo_v11n.track(
-            frame,
-            imgsz=IMG_SIZE,
-            conf=CONF_THRES,
-            iou=IOU_THRES,
-            tracker=TRACKER_CFG,
-            persist=True,
-            verbose=False
-        )
         detections_with_ids = []
         r0 = results[0]
         if r0.boxes and r0.boxes.id is not None:

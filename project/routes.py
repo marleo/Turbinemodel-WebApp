@@ -8,13 +8,14 @@ from werkzeug.utils import secure_filename
 
 # Import our project-specific modules
 from .processing import process_video, gen_webcam_frames
-from .models import yolo_v8, yolo_v11n, yolo_v11s, active_model_lock
+from .models import yolo_v8, yolo_v11n, yolo_v11s, active_model_lock, active_model, active_model_name
 
 # 'main' is the name of our blueprint
 main = Blueprint('main', __name__)
 
 @main.route("/", methods=["GET","POST"])
 def index():
+    from . import models
     if request.method == "POST":
         f = request.files.get("file")
         if not f or f.filename == "":
@@ -29,7 +30,7 @@ def index():
         out_path = os.path.join(current_app.config['OUTPUT_FOLDER'], out_name)
 
         try:
-            process_video(in_path, out_path)
+            process_video(in_path, out_path, models.active_model, models.active_model_name)
             video_url = url_for("static", filename=f"outputs/{out_name}")
             print("File saved at:", out_path)
             print("Serving at:", url_for("static", filename=f"outputs/{out_name}"))
@@ -53,17 +54,18 @@ def webcam_feed():
 
 @main.route("/set_model/<model_name>")
 def set_model(model_name):
-    # This is a bit tricky with module-level globals, but works for development servers.
-    # We need to modify the global 'active_model' in the 'models' module.
     from . import models
 
     with active_model_lock:
         if model_name.lower() == "v8":
             models.active_model = models.yolo_v8
+            models.active_model_name = "YOLOv8"
         elif model_name.lower() == "v11n":
             models.active_model = models.yolo_v11n
+            models.active_model_name = "YOLOv11n"
         elif model_name.lower() == "v11s":
             models.active_model = models.yolo_v11s
+            models.active_model_name = "YOLOv11s"
         else:
             return f"Unknown model {model_name}", 400
     return f"Switched to model {model_name.upper()}"

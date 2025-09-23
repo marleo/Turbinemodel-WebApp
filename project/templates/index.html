@@ -24,8 +24,16 @@ video, img { width:100%; max-height:70vh; border-radius:12px; border:4px solid #
 {% block content %}
 <h1>Live/Offline Segmentation Tool</h1>
 <p class="hint">Upload a video or start a live webcam feed to see the tracking in action.</p>
-
 <div class="card">
+    <select id="model-select" onchange="switchModel()">
+        <option value="v8" selected>YOLOv8</option>
+        <option value="v11n">YOLOv11n</option>
+        <option value="v11s">YOLOv11s</option>
+    </select>
+    <p id="model-status" style="margin-top:8px; font-size:14px; color:#333;">Active Model: V8</p>
+</div>
+
+<div class="card" style="margin-top:16px;">
     <form method="post" enctype="multipart/form-data" action="{{ url_for('main.index') }}">
         <input type="file" name="file" accept="video/*" required>
         <button class="btn" type="submit">Upload & Process Video</button>
@@ -35,13 +43,6 @@ video, img { width:100%; max-height:70vh; border-radius:12px; border:4px solid #
 
 <div class="card" style="margin-top:16px;">
     <p style="margin:0 0 16px 0;">Live Webcam Tracking:</p>
-    <select id="model-select">
-        <option value="v8">YOLOv8</option>
-        <option value="v11n" selected>YOLOv11n</option>
-        <option value="v11s">YOLOv11s</option>
-    </select>
-    <p id="model-status" style="margin-top:8px; font-size:14px; color:#333;">Active Model: V8</p>
-    <button class="btn" onclick="switchModel()">Switch Model</button>
     <button class="btn" onclick="startWebcam()">Start Live Feed</button>
 </div>
 
