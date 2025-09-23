@@ -137,7 +137,8 @@ def process_video(in_path, out_path, model=None, model_name=None):
             break
         
         with active_model_lock:
-            print(f" [INFO] Using {active_model_name} model for processing.")
+            if(frame_count == 1):
+                print(f" [INFO] Using {active_model_name} model for processing.")
             results = active_model.track(
                 frame,
                 imgsz=IMG_SIZE,
@@ -169,7 +170,6 @@ def process_video(in_path, out_path, model=None, model_name=None):
                         'poly': None
                     })
 
-        # --- NEW: update hub position based on centroids ---
         centroids = [d['centroid'] for d in detections_with_ids]
         if len(centroids) >= 2:
             current_hub_pos = np.mean(centroids, axis=0)
@@ -198,7 +198,7 @@ def process_video(in_path, out_path, model=None, model_name=None):
         cv2.circle(annotated, (int(hub_cx), int(hub_cy)), 9, (0,0,0), 2)
 
         out.write(annotated)
-        print(f"\r[INFO] Processing frame {frame_count}/{total_frames}", end="")
+        print(f"\r[INFO] Processing frame {frame_count}/{total_frames}", end="", flush=True)
 
     cap.release()
     out.release()
